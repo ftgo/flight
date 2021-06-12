@@ -2,3 +2,5 @@
 /venv/
 *.xlsx
 *.xlsx#
+
+.idea/*
