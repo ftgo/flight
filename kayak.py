@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 
-# from selenium.webdriver.common.keys import Keys
+import datetime
 from time import sleep, strftime
 
 import pandas
-import datetime
 from selenium import webdriver
 
 # Change this to your own chromedriver path!
@@ -55,7 +54,6 @@ def load_more():
     try:
         more_results = '//a[@class = "moreButton"]'
         driver.find_element_by_xpath(more_results).click()
-        # Printing these notes during the program helps me quickly check what it is doing
         print('Loading more...')
         sleep(5)
         driver.execute_script("window.scrollTo(0,0);")
@@ -64,9 +62,8 @@ def load_more():
     except:
         pass
 
-    # sometimes a popup shows up, so we can use a try statement to check it and close
 
-
+# sometimes a popup shows up, so we can use a try statement to check it and close
 def popup_close():
     try:
         xp_popup_close = '//button[contains(@id,"dialog-close") and contains(@class,"Button-No-Standard-Style close")]'
@@ -80,7 +77,6 @@ def popup_close():
 def page_scrape():
     """This function takes care of the scraping part"""
 
-    # '//*[@class="section duration allow-multi-modal-icons"]'
     durations = driver.find_elements_by_xpath('//*[contains(@class, "section") and contains(@class, "duration")]')
     durations_list = [value.text for value in durations]
     # section_a_list = sections_list[::2]  # This is to separate the two flights
@@ -103,19 +99,8 @@ def page_scrape():
                                  'timestamp': []})[
             (['Date', 'Airline', 'Cities', 'Stops', 'Duration', 'Time', 'Total', 'Price', 'timestamp'])]
 
-    # duration = []
-    # section_names = []
-    # for n in durations_list:
-    #     # Separate the time from the cities
-    #     # section_names.append(''.join(n.split()[2:5]))
-    #     duration.append(''.join(n.split()[0:2]))
-
     dates = driver.find_elements_by_xpath('//div[contains(@class, "with-date")]')
     dates_list = [value.text for value in dates]
-
-    # Separating the weekday from the day
-    # day = [value.split()[0] for value in dates_list]
-    # weekday = [value.split()[1] for value in dates_list]
 
     # getting the prices
     totals = driver.find_elements_by_xpath('//*[@class="price-total"]')
