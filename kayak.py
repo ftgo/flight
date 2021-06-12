@@ -4,6 +4,7 @@
 from time import sleep, strftime
 
 import pandas
+import datetime
 from selenium import webdriver
 
 # Change this to your own chromedriver path!
@@ -40,6 +41,15 @@ def simple_test(city_from, city_to, dates):
     print(flights3)
 
 
+def wait_progress():
+    # sleep(20)
+    try:
+        driver.find_element_by_xpath('//*[contains(@class,"progress-bar")]/div[contains(@class,"Hidden")]')
+    except:
+        sleep(2)
+        wait_progress()
+
+
 # Load more results to maximize the scraping
 def load_more():
     try:
@@ -47,7 +57,7 @@ def load_more():
         driver.find_element_by_xpath(more_results).click()
         # Printing these notes during the program helps me quickly check what it is doing
         print('Loading more...')
-        sleep(8)
+        sleep(5)
         driver.execute_script("window.scrollTo(0,0);")
         sleep(2)
         driver.execute_script("window.scrollTo(0,0);")
@@ -59,7 +69,7 @@ def load_more():
 
 def popup_close():
     try:
-        xp_popup_close = '//button[contains(@id,"dialog-close") and contains(@class,"Button-No-Standard-Style close ")]'
+        xp_popup_close = '//button[contains(@id,"dialog-close") and contains(@class,"Button-No-Standard-Style close")]'
         driver.find_elements_by_xpath(xp_popup_close)[5].click()
         sleep(5)
         driver.execute_script("window.scrollTo(0,0);")
@@ -154,18 +164,20 @@ def start_kayak(level, city_from, city_to, dates):
     df_flights = pandas.DataFrame()
 
     for date in dates:
+        # 'layoverdur=180-;' \
+        # 'layoverdur=-720;' \
+        # 'legdur=-1830;' \
         url = 'https://www.kayak.com.br/flights/' \
               + city_from + '-' + city_to + '/' + date + '-flexible/' + level \
               + '/2adults/children-17-17?sort=bestflight_a&' \
-                'fs=layoverdur=-720;' \
-                'legdur=-1830;' \
+                'fs=' \
                 'layoverair=-ORD,EWR,MIA,FLL,LGA,CLT,JFK,IAH,DFW,PHL,ATL,LIS,CDG,MCO,IAD'
 
         print('URL: ' + url)
-        kayak = (url)
-        driver.get(kayak)
+        driver.get(url)
         driver.set_window_position(800, 30)
-        sleep(15)
+
+        wait_progress()
 
         popup_close()
 
@@ -174,6 +186,7 @@ def start_kayak(level, city_from, city_to, dates):
         print('Scraping Best')
         df_flights_best = page_scrape()
         df_flights_best['sort'] = 'best'
+        df_flights_best['url'] = url
         if len(df_flights.index) == 0:
             df_flights = df_flights_best
         else:
@@ -188,6 +201,7 @@ def start_kayak(level, city_from, city_to, dates):
 
         df_flights_cheap = page_scrape()
         df_flights_cheap['sort'] = 'cheap'
+        df_flights_cheap['url'] = url
         df_flights = df_flights.append(df_flights_cheap)
 
         print('Scraping Fastest')
@@ -199,6 +213,7 @@ def start_kayak(level, city_from, city_to, dates):
 
         df_flights_fast = page_scrape()
         df_flights_fast['sort'] = 'fast'
+        df_flights_fast['url'] = url
         df_flights = df_flights.append(df_flights_fast)
 
         # Let's also get the lowest prices from the matrix on top
@@ -207,6 +222,8 @@ def start_kayak(level, city_from, city_to, dates):
         matrix_prices = list(filter(('').__ne__, matrix_prices))
         matrix_prices = list(map(int, matrix_prices))
         matrix_prices_all.extend(matrix_prices)
+
+
 
         # final_df = df_flights_cheap.append(df_flights_best).append(df_flights_fast)
         # final_df.to_excel('{}_flights_{}-{}.xlsx'.format(strftime("%Y%m%d-%H%M%S"),
@@ -244,10 +261,19 @@ def start_kayak(level, city_from, city_to, dates):
           'Average Price: {}\n'
           .format(city_from, city_to, dates, matrix_min, matrix_avg))
 
+def get_dates(start, end, delta = datetime.timedelta(days=7)):
+    date = start + delta / 2
+    dates = []
+    while date <= end:
+        dates.append(date.strftime('%Y-%m-%d'))
+        date += delta
+
+    return dates
 
 # august/2021
 # economy, premium, business, first, economy,business
+start_kayak('economy', 'REC', 'YUL', get_dates(datetime.date(2021, 7, 30), datetime.date(2021, 9, 30)))
 # start_kayak('economy', 'REC', 'YUL', ['2021-08-09'])
-start_kayak('economy', 'REC', 'YUL', ['2021-08-09', '2021-08-16', '2021-08-23', '2021-08-30', '2021-09-06'])
+# start_kayak('economy', 'REC', 'YUL', ['2021-08-02', '2021-08-09', '2021-08-16', '2021-08-23', '2021-08-30', '2021-09-06'])
 # start_kayak('business', 'REC', 'YUL', ['2021-08-09', '2021-08-16', '2021-08-23', '2021-08-30', '2021-09-06'])
 # start_kayak('economy,business', 'REC', 'YUL', ['2021-08-09', '2021-08-16', '2021-08-23', '2021-08-30', '2021-09-06'])
