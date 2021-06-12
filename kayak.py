@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
-import datetime
+from datetime import timedelta, date
+from math import ceil
 from time import sleep, strftime
 
 import pandas
@@ -107,7 +108,7 @@ def page_scrape():
     totals_list = [total.text.replace('R$ ', '').replace(' no total', '').replace('.', '') for total in totals if
                    total.text != '']
     totals_list = list(map(int, totals_list))
-    prices_list = [(total / 4) for total in totals_list]
+    prices_list = [ceil(total / 4) for total in totals_list]  # 4 passengers
 
     # the stops are a big list with one leg on the even index and second leg on odd index
     stops = driver.find_elements_by_xpath('//div[@class="section stops"]/div[1]')
@@ -152,11 +153,12 @@ def start_kayak(level, city_from, city_to, dates):
         # 'layoverdur=180-;' \
         # 'layoverdur=-720;' \
         # 'legdur=-1830;' \
+        # LIS,CDG
         url = 'https://www.kayak.com.br/flights/' \
               + city_from + '-' + city_to + '/' + date + '-flexible/' + level \
               + '/2adults/children-17-17?sort=bestflight_a&' \
                 'fs=' \
-                'layoverair=-ORD,EWR,MIA,FLL,LGA,CLT,JFK,IAH,DFW,PHL,ATL,LIS,CDG,MCO,IAD'
+                'layoverair=-ORD,EWR,MIA,FLL,LGA,CLT,JFK,IAH,DFW,PHL,ATL,MCO,IAD'
 
         print('URL: ' + url)
         driver.get(url)
@@ -242,7 +244,7 @@ def start_kayak(level, city_from, city_to, dates):
           .format(city_from, city_to, dates, matrix_min, matrix_avg))
 
 
-def get_dates(start, end, delta=datetime.timedelta(days=7)):
+def get_dates(start, end, delta=timedelta(days=7)):
     date = start + delta / 2
     dates = []
     while date <= end:
@@ -255,4 +257,4 @@ def get_dates(start, end, delta=datetime.timedelta(days=7)):
 # august/2021
 # economy, premium, business, first, economy,business
 # start_kayak('economy', 'REC', 'YUL', get_dates(datetime.date(2021, 7, 30), datetime.date(2021, 9, 30)))
-start_kayak('economy', 'REC', 'YUL', get_dates(datetime.date(2021, 7, 30), datetime.date(2021, 9, 7)))
+start_kayak('economy', 'REC', 'YUL', get_dates(date(2021, 7, 30), date(2021, 9, 7)))
