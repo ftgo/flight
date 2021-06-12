@@ -216,18 +216,26 @@ def start_kayak(level, city_from, city_to, dates):
         df_flights_fast['url'] = url
         df_flights = df_flights.append(df_flights_fast)
 
+        # We can keep track of what they predict and how it actually turns out!
+        # xp_loading = '//div[contains(@id,"advice")]'
+        # loading = driver.find_element_by_xpath(xp_loading).text
+        # xp_prediction = '//s
+        # pan[@class="info-text"]'
+        # prediction = driver.find_element_by_xpath(xp_prediction).text
+        # print(loading + '\n' + prediction)
+
+        # sometimes we get this string in the loading variable, which will conflict with the email we send later
+        # just change it to "Not Sure" if it happens
+        # weird = '¯\\_(ツ)_/¯'
+        # if loading == weird:
+        #     loading = 'Not sure'
+
         # Let's also get the lowest prices from the matrix on top
         matrix = driver.find_elements_by_xpath('//*[contains(@id,"FlexMatrixCell")]')
         matrix_prices = [price.text.replace('R$ ', '').replace('.', '') for price in matrix]
         matrix_prices = list(filter(('').__ne__, matrix_prices))
         matrix_prices = list(map(int, matrix_prices))
         matrix_prices_all.extend(matrix_prices)
-
-
-
-        # final_df = df_flights_cheap.append(df_flights_best).append(df_flights_fast)
-        # final_df.to_excel('{}_flights_{}-{}.xlsx'.format(strftime("%Y%m%d-%H%M%S"),
-        #                                                  city_from, city_to), index=False)
 
     file = '{}_{}_{}-{}.xlsx'.format(strftime("%Y%m%d-%H%M%S"), level.replace(',', '-'), city_from, city_to)
 
@@ -236,19 +244,6 @@ def start_kayak(level, city_from, city_to, dates):
     df_flights.to_excel(file, index=False)
 
     print('Saved DataFrame to {}'.format(file))
-    # We can keep track of what they predict and how it actually turns out!
-    # xp_loading = '//div[contains(@id,"advice")]'
-    # loading = driver.find_element_by_xpath(xp_loading).text
-    # xp_prediction = '//s
-    # pan[@class="info-text"]'
-    # prediction = driver.find_element_by_xpath(xp_prediction).text
-    # print(loading + '\n' + prediction)
-
-    # sometimes we get this string in the loading variable, which will conflict with the email we send later
-    # just change it to "Not Sure" if it happens
-    # weird = '¯\\_(ツ)_/¯'
-    # if loading == weird:
-    #     loading = 'Not sure'
 
     matrix_min = min(matrix_prices_all)
     matrix_avg = sum(matrix_prices_all) / len(matrix_prices_all)
@@ -261,7 +256,8 @@ def start_kayak(level, city_from, city_to, dates):
           'Average Price: {}\n'
           .format(city_from, city_to, dates, matrix_min, matrix_avg))
 
-def get_dates(start, end, delta = datetime.timedelta(days=7)):
+
+def get_dates(start, end, delta=datetime.timedelta(days=7)):
     date = start + delta / 2
     dates = []
     while date <= end:
@@ -270,10 +266,8 @@ def get_dates(start, end, delta = datetime.timedelta(days=7)):
 
     return dates
 
+
 # august/2021
 # economy, premium, business, first, economy,business
-start_kayak('economy', 'REC', 'YUL', get_dates(datetime.date(2021, 7, 30), datetime.date(2021, 9, 30)))
-# start_kayak('economy', 'REC', 'YUL', ['2021-08-09'])
-# start_kayak('economy', 'REC', 'YUL', ['2021-08-02', '2021-08-09', '2021-08-16', '2021-08-23', '2021-08-30', '2021-09-06'])
-# start_kayak('business', 'REC', 'YUL', ['2021-08-09', '2021-08-16', '2021-08-23', '2021-08-30', '2021-09-06'])
-# start_kayak('economy,business', 'REC', 'YUL', ['2021-08-09', '2021-08-16', '2021-08-23', '2021-08-30', '2021-09-06'])
+# start_kayak('economy', 'REC', 'YUL', get_dates(datetime.date(2021, 7, 30), datetime.date(2021, 9, 30)))
+start_kayak('economy', 'REC', 'YUL', get_dates(datetime.date(2021, 7, 30), datetime.date(2021, 9, 7)))
