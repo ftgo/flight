@@ -67,15 +67,14 @@ def load_more():
 # sometimes a popup shows up, so we can use a try statement to check it and close
 def popup_close():
     try:
-        xp_popup_close = '//button[contains(@id,"dialog-close") and contains(@class,"Button-No-Standard-Style close")]'
-        driver.find_elements_by_xpath(xp_popup_close)[5].click()
-        sleep(5)
+        driver.find_element_by_xpath('//div[@role="dialog" and contains(@class,"visible")]/div[@role="button"]').click()
+        sleep(1)
         driver.execute_script("window.scrollTo(0,0);")
     except Exception as e:
         pass
 
 
-def page_scrape():
+def page_scrape_1():
     """This function takes care of the scraping part"""
 
     durations = driver.find_elements_by_xpath('//*[contains(@class, "section") and contains(@class, "duration")]')
@@ -141,6 +140,70 @@ def page_scrape():
     return flights_df
 
 
+def page_scrape_2():
+    """This function takes care of the scraping part"""
+
+    durations_xp = driver.find_elements_by_xpath('//*[contains(@class, "section") and contains(@class, "duration")]')
+    durations = [value.text for value in durations_xp]
+
+    # if you run into a reCaptcha, you might want to do something about it
+    # you will know there's a problem if the lists above are empty
+    # this if statement lets you exit the bot or do something else
+    # you can add a sleep here, to let you solve the captcha and continue scraping
+    # i'm using a SystemExit because i want to test everything from the start
+    if not durations:
+        return pandas.DataFrame({'Airline': [],
+                                 'Date': [],
+                                 'Cities': [],
+                                 'Stops': [],
+                                 'Duration': [],
+                                 'Time': [],
+                                 'Total': [],
+                                 'Price': [],
+                                 'timestamp': []})[
+            (['Airline', 'Date', 'Cities', 'Stops', 'Duration', 'Time', 'Total', 'Price', 'timestamp'])]
+
+    dates_xp = driver.find_elements_by_xpath('//div[contains(@class, "with-date")]')
+    dates = [value.text for value in dates_xp]
+
+    # getting the prices
+    totals_xp = driver.find_elements_by_xpath('//*[@class="price-total"]')
+    totals = [total.text.replace('R$ ', '').replace(' no total', '').replace('.', '') for total in totals_xp if
+              total.text != '']
+    totals = list(map(int, totals))
+    prices = [ceil(total / 4) for total in totals]  # 4 passengers
+
+    # the stops are a big list with one leg on the even index and second leg on odd index
+    stops_xp = driver.find_elements_by_xpath('//div[@class="section stops"]/div[1]')
+    stops = [stop.text[0].replace('n', '0') for stop in stops_xp]
+
+    cities_xp = driver.find_elements_by_xpath('//div[@class="section stops"]/div[2]')
+    cities = [stop.text for stop in cities_xp]
+
+    # this part gets me the airline company and the departure and arrival times, for both legs
+    schedules_xp = driver.find_elements_by_xpath('//div[@class="section times"]')
+    hours = []
+    for schedule_xp in schedules_xp:
+        hours.append(schedule_xp.text.split('\n')[0])
+
+    airlines_xp = driver.find_elements_by_xpath('//*[@class="codeshares-airline-names"]')
+    airlines = [stop.text for stop in airlines_xp]
+
+    flights_df = pandas.DataFrame({'Airline': airlines,
+                                   'Date': dates,
+                                   'Cities': cities,
+                                   'Stops': stops,
+                                   'Duration': durations,
+                                   'Time': hours,
+                                   'Total': totals,
+                                   'Price': prices})[
+        (['Airline', 'Date', 'Cities', 'Stops', 'Duration', 'Time', 'Total', 'Price'])]
+
+    flights_df['timestamp'] = strftime("%Y%m%d-%H%M")  # so we can know when it was scraped
+
+    return flights_df
+
+
 def start_kayak(level, city_from, city_to, dates):
     """City codes - it's the IATA codes!
     Date format -  YYYY-MM-DD"""
@@ -171,7 +234,7 @@ def start_kayak(level, city_from, city_to, dates):
         load_more()
 
         print('Scraping Best')
-        df_flights_best = page_scrape()
+        df_flights_best = page_scrape_1()
         df_flights_best['sort'] = 'best'
         df_flights_best['url'] = url
         if len(df_flights.index) == 0:
@@ -186,7 +249,7 @@ def start_kayak(level, city_from, city_to, dates):
 
         load_more()
 
-        df_flights_cheap = page_scrape()
+        df_flights_cheap = page_scrape_1()
         df_flights_cheap['sort'] = 'cheap'
         df_flights_cheap['url'] = url
         df_flights = df_flights.append(df_flights_cheap)
@@ -198,7 +261,7 @@ def start_kayak(level, city_from, city_to, dates):
 
         load_more()
 
-        df_flights_fast = page_scrape()
+        df_flights_fast = page_scrape_1()
         df_flights_fast['sort'] = 'fast'
         df_flights_fast['url'] = url
         df_flights = df_flights.append(df_flights_fast)
@@ -227,6 +290,8 @@ def start_kayak(level, city_from, city_to, dates):
     file = '{}_{}_{}-{}.xlsx'.format(strftime("%Y%m%d-%H%M%S"), level.replace(',', '-'), city_from, city_to)
 
     df_flights = df_flights.sort_values(['Total', 'Duration', 'Stops'])
+    df_flights = df_flights.drop_duplicates(subset=["Date", "Airline", "Cities", "Stops",
+                                                    "Duration", "Time", "Total", "Price"])
 
     df_flights.to_excel(file, index=False)
 
@@ -244,10 +309,197 @@ def start_kayak(level, city_from, city_to, dates):
           .format(city_from, city_to, dates, matrix_min, matrix_avg))
 
 
+def page_scrape_2():
+    """This function takes care of the scraping part"""
+
+    # //div[contains(@id, "leg-0")]
+    durations_xp = driver.find_elements_by_xpath('//*[contains(@class, "section") and contains(@class, "duration")]')
+    durations = [value.text for value in durations_xp]
+
+    # if you run into a reCaptcha, you might want to do something about it
+    # you will know there's a problem if the lists above are empty
+    # this if statement lets you exit the bot or do something else
+    # you can add a sleep here, to let you solve the captcha and continue scraping
+    # i'm using a SystemExit because i want to test everything from the start
+    if not durations:
+        return pandas.DataFrame({'Airline': [],
+                                 'Date1': [],
+                                 'Cities1': [],
+                                 'Stops1': [],
+                                 'Duration1': [],
+                                 'Time1': [],
+                                 'Date2': [],
+                                 'Cities2': [],
+                                 'Stops2': [],
+                                 'Duration2': [],
+                                 'Time2': [],
+                                 'Total': [],
+                                 'Price': []})[
+            (['Airline',
+              'Date1', 'Cities1', 'Stops1', 'Duration1', 'Time1',
+              'Date2', 'Cities2', 'Stops2', 'Duration2', 'Time2',
+              'Total', 'Price'])]
+
+    dates_xp = driver.find_elements_by_xpath('//div[contains(@class, "with-date")]')
+    dates = [value.text for value in dates_xp]
+
+    # getting the prices
+    totals_xp = driver.find_elements_by_xpath('//*[@class="price-total"]')
+    totals = [total.text.replace('R$ ', '').replace(' no total', '').replace('.', '') for total in totals_xp if
+              total.text != '']
+    totals = list(map(int, totals))
+    prices = [ceil(total / 4) for total in totals]  # 4 passengers
+
+    # the stops are a big list with one leg on the even index and second leg on odd index
+    stops_xp = driver.find_elements_by_xpath('//div[@class="section stops"]/div[1]')
+    stops = [stop.text[0].replace('n', '0') for stop in stops_xp]
+
+    cities_xp = driver.find_elements_by_xpath('//div[@class="section stops"]/div[2]')
+    cities = [stop.text for stop in cities_xp]
+
+    # this part gets me the airline company and the departure and arrival times, for both legs
+    schedules_xp = driver.find_elements_by_xpath('//div[@class="section times"]')
+    hours = []
+    for schedule_xp in schedules_xp:
+        hours.append(schedule_xp.text.split('\n')[0])
+
+    airlines_xp = driver.find_elements_by_xpath('//*[@class="codeshares-airline-names"]')
+    airlines = [stop.text for stop in airlines_xp]
+
+    flights_df = pandas.DataFrame({'Airline': airlines,
+                                   'Date1': dates[::2],
+                                   'Cities1': cities[::2],
+                                   'Stops1': stops[::2],
+                                   'Duration1': durations[::2],
+                                   'Time1': hours[::2],
+                                   'Date2': dates[1::2],
+                                   'Cities2': cities[1::2],
+                                   'Stops2': stops[1::2],
+                                   'Duration2': durations[1::2],
+                                   'Time2': hours[1::2],
+                                   'Total': totals,
+                                   'Price': prices})[
+        (['Airline',
+          'Date1', 'Cities1', 'Stops1', 'Duration1', 'Time1',
+          'Date2', 'Cities2', 'Stops2', 'Duration2', 'Time2',
+          'Total', 'Price'])]
+
+    flights_df['timestamp'] = strftime("%Y%m%d-%H%M")  # so we can know when it was scraped
+
+    return flights_df
+
+
+def start_kayak(level, city_from, city_to, dates1, dates2):
+    """City codes - it's the IATA codes!
+    Date format -  YYYY-MM-DD"""
+
+    matrix_prices_all = []
+
+    df_flights = pandas.DataFrame()
+
+    for date1 in dates1:
+        for date2 in dates2:
+            # 'layoverdur=180-;' \
+            # 'layoverdur=-720;' \
+            # 'legdur=-1830;' \
+            # LIS,CDG
+            url = 'https://www.kayak.com.br/flights/' \
+                  + city_from + '-' + city_to + '/' + date1 + '-flexible-3days/' + date2 + '-flexible-3days/' + level \
+                  + '/2adults/children-17-17?sort=bestflight_a&' \
+                    'fs=' \
+                    'layoverair=-ORD,EWR,MIA,FLL,LGA,CLT,JFK,IAH,DFW,PHL,ATL,MCO,IAD'
+
+            print('URL: ' + url)
+            driver.get(url)
+            driver.set_window_position(800, 30)
+
+            wait_progress()
+
+            popup_close()
+
+            load_more()
+
+            print('Scraping Best')
+            df_flights_best = page_scrape_2()
+            df_flights_best['sort'] = 'best'
+            df_flights_best['url'] = url
+            if len(df_flights.index) == 0:
+                df_flights = df_flights_best
+            else:
+                df_flights = df_flights.append(df_flights_best)
+
+            print('Scraping Cheapest')
+            driver.find_element_by_xpath('//a[@data-code = "price"]').click()
+            sleep(5)
+
+            load_more()
+
+            df_flights_cheap = page_scrape_2()
+            df_flights_cheap['sort'] = 'cheap'
+            df_flights_cheap['url'] = url
+            df_flights = df_flights.append(df_flights_cheap)
+
+            print('Scraping Fastest')
+            driver.find_element_by_xpath('//a[@data-code = "duration"]').click()
+            sleep(5)
+
+            load_more()
+
+            df_flights_fast = page_scrape_2()
+            df_flights_fast['sort'] = 'fast'
+            df_flights_fast['url'] = url
+            df_flights = df_flights.append(df_flights_fast)
+
+            # We can keep track of what they predict and how it actually turns out!
+            # xp_loading = '//div[contains(@id,"advice")]'
+            # loading = driver.find_element_by_xpath(xp_loading).text
+            # xp_prediction = '//s
+            # pan[@class="info-text"]'
+            # prediction = driver.find_element_by_xpath(xp_prediction).text
+            # print(loading + '\n' + prediction)
+
+            # sometimes we get this string in the loading variable, which will conflict with the email we send later
+            # just change it to "Not Sure" if it happens
+            # weird = '¯\\_(ツ)_/¯'
+            # if loading == weird:
+            #     loading = 'Not sure'
+
+            # Let's also get the lowest prices from the matrix on top
+            matrix = driver.find_elements_by_xpath('//*[contains(@id,"FlexMatrixCell")]')
+            matrix_prices = [price.text.replace('R$ ', '').replace('.', '') for price in matrix]
+            matrix_prices = list(filter(('').__ne__, matrix_prices))
+            matrix_prices = list(map(int, matrix_prices))
+            matrix_prices_all.extend(matrix_prices)
+
+    file = '{}_{}_{}-{}.xlsx'.format(strftime("%Y%m%d-%H%M%S"), level.replace(',', '-'), city_from, city_to)
+
+    df_flights = df_flights.sort_values(['Total', 'Duration1', 'Stops1', 'Duration2', 'Stops2'])
+    df_flights = df_flights.drop_duplicates(subset=['Airline',
+                                                    'Date1', 'Cities1', 'Stops1', 'Duration1', 'Time1',
+                                                    'Date2', 'Cities2', 'Stops2', 'Duration2', 'Time2',
+                                                    'Total', 'Price'])
+
+    df_flights.to_excel(file, index=False)
+
+    print('Saved DataFrame to {}'.format(file))
+
+    matrix_min = min(matrix_prices_all)
+    matrix_avg = sum(matrix_prices_all) / len(matrix_prices_all)
+
+    # (loading + '\n' + prediction)
+    print('Source: {}\n'
+          'Destination: {}\n'
+          'Dates1: {}\n'
+          'Dates2: {}\n'
+          'Cheapest Flight: {}\n'
+          'Average Price: {}\n'
+          .format(city_from, city_to, dates1, dates2, matrix_min, matrix_avg))
+
+
 def get_dates(start, end, delta=timedelta(days=7)):
     date = start + delta / 2
     dates = []
-    while date <= end:
+    while (date + delta / 2) <= end:
         dates.append(date.strftime('%Y-%m-%d'))
         date += delta
 
@@ -256,5 +508,7 @@ def get_dates(start, end, delta=timedelta(days=7)):
 
 # august/2021
 # economy, premium, business, first, economy,business
-# start_kayak('economy', 'REC', 'YUL', get_dates(datetime.date(2021, 7, 30), datetime.date(2021, 9, 30)))
-start_kayak('economy', 'REC', 'YUL', get_dates(date(2021, 7, 30), date(2021, 9, 7)))
+# start_kayak('economy', 'REC', 'YUL', get_dates(date(2021, 7, 30), date(2021, 9, 7)))
+start_kayak('economy', 'REC', 'YUL',
+            get_dates(date(2021, 7, 30), date(2021, 8, 6)),
+            get_dates(date(2021, 9, 30), date(2021, 10, 6)))
