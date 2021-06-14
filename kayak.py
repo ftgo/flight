@@ -140,70 +140,6 @@ def page_scrape_1():
     return flights_df
 
 
-def page_scrape_2():
-    """This function takes care of the scraping part"""
-
-    durations_xp = driver.find_elements_by_xpath('//*[contains(@class, "section") and contains(@class, "duration")]')
-    durations = [value.text for value in durations_xp]
-
-    # if you run into a reCaptcha, you might want to do something about it
-    # you will know there's a problem if the lists above are empty
-    # this if statement lets you exit the bot or do something else
-    # you can add a sleep here, to let you solve the captcha and continue scraping
-    # i'm using a SystemExit because i want to test everything from the start
-    if not durations:
-        return pandas.DataFrame({'Airline': [],
-                                 'Date': [],
-                                 'Cities': [],
-                                 'Stops': [],
-                                 'Duration': [],
-                                 'Time': [],
-                                 'Total': [],
-                                 'Price': [],
-                                 'timestamp': []})[
-            (['Airline', 'Date', 'Cities', 'Stops', 'Duration', 'Time', 'Total', 'Price', 'timestamp'])]
-
-    dates_xp = driver.find_elements_by_xpath('//div[contains(@class, "with-date")]')
-    dates = [value.text for value in dates_xp]
-
-    # getting the prices
-    totals_xp = driver.find_elements_by_xpath('//*[@class="price-total"]')
-    totals = [total.text.replace('R$ ', '').replace(' no total', '').replace('.', '') for total in totals_xp if
-              total.text != '']
-    totals = list(map(int, totals))
-    prices = [ceil(total / 4) for total in totals]  # 4 passengers
-
-    # the stops are a big list with one leg on the even index and second leg on odd index
-    stops_xp = driver.find_elements_by_xpath('//div[@class="section stops"]/div[1]')
-    stops = [stop.text[0].replace('n', '0') for stop in stops_xp]
-
-    cities_xp = driver.find_elements_by_xpath('//div[@class="section stops"]/div[2]')
-    cities = [stop.text for stop in cities_xp]
-
-    # this part gets me the airline company and the departure and arrival times, for both legs
-    schedules_xp = driver.find_elements_by_xpath('//div[@class="section times"]')
-    hours = []
-    for schedule_xp in schedules_xp:
-        hours.append(schedule_xp.text.split('\n')[0])
-
-    airlines_xp = driver.find_elements_by_xpath('//*[@class="codeshares-airline-names"]')
-    airlines = [stop.text for stop in airlines_xp]
-
-    flights_df = pandas.DataFrame({'Airline': airlines,
-                                   'Date': dates,
-                                   'Cities': cities,
-                                   'Stops': stops,
-                                   'Duration': durations,
-                                   'Time': hours,
-                                   'Total': totals,
-                                   'Price': prices})[
-        (['Airline', 'Date', 'Cities', 'Stops', 'Duration', 'Time', 'Total', 'Price'])]
-
-    flights_df['timestamp'] = strftime("%Y%m%d-%H%M")  # so we can know when it was scraped
-
-    return flights_df
-
-
 def start_kayak(level, city_from, city_to, dates):
     """City codes - it's the IATA codes!
     Date format -  YYYY-MM-DD"""
@@ -505,10 +441,12 @@ def get_dates(start, end, delta=timedelta(days=7)):
 
     return dates
 
-
 # august/2021
-# economy, premium, business, first, economy,business
-# start_kayak('economy', 'REC', 'YUL', get_dates(date(2021, 7, 30), date(2021, 9, 7)))
+# level: economy, premium, business, first, economy,business
+# one-way
+start_kayak('economy', 'REC', 'YUL',
+            get_dates(date(2021, 7, 30), date(2021, 9, 7)))
+# round-trip
 start_kayak('economy', 'REC', 'YUL',
             get_dates(date(2021, 7, 30), date(2021, 8, 6)),
             get_dates(date(2021, 9, 30), date(2021, 10, 6)))
