@@ -140,7 +140,7 @@ def page_scrape_1():
     return flights_df
 
 
-def start_kayak(level, city_from, city_to, dates):
+def start_kayak_1(level, city_from, city_to, dates):
     """City codes - it's the IATA codes!
     Date format -  YYYY-MM-DD"""
 
@@ -222,6 +222,10 @@ def start_kayak(level, city_from, city_to, dates):
         matrix_prices = list(filter(('').__ne__, matrix_prices))
         matrix_prices = list(map(int, matrix_prices))
         matrix_prices_all.extend(matrix_prices)
+
+    if len(df_flights.index) == 0:
+        print("No flights found.")
+        SystemExit(1)
 
     file = '{}_{}_{}-{}.xlsx'.format(strftime("%Y%m%d-%H%M%S"), level.replace(',', '-'), city_from, city_to)
 
@@ -325,7 +329,7 @@ def page_scrape_2():
     return flights_df
 
 
-def start_kayak(level, city_from, city_to, dates1, dates2):
+def start_kayak_2(level, city_from, city_to, dates1, dates2):
     """City codes - it's the IATA codes!
     Date format -  YYYY-MM-DD"""
 
@@ -407,6 +411,10 @@ def start_kayak(level, city_from, city_to, dates1, dates2):
             matrix_prices = list(map(int, matrix_prices))
             matrix_prices_all.extend(matrix_prices)
 
+    if len(df_flights.index) == 0:
+        print("No flights found.")
+        SystemExit(1)
+
     file = '{}_{}_{}-{}.xlsx'.format(strftime("%Y%m%d-%H%M%S"), level.replace(',', '-'), city_from, city_to)
 
     df_flights = df_flights.sort_values(['Total', 'Duration1', 'Stops1', 'Duration2', 'Stops2'])
@@ -441,12 +449,13 @@ def get_dates(start, end, delta=timedelta(days=7)):
 
     return dates
 
+
 # august/2021
 # level: economy, premium, business, first, economy,business
 # one-way
-start_kayak('economy', 'REC', 'YUL',
-            get_dates(date(2021, 7, 30), date(2021, 9, 7)))
+start_kayak_1('economy', 'REC', 'YUL',
+              get_dates(date(2021, 7, 30), date(2021, 9, 7)))
 # round-trip
-start_kayak('economy', 'REC', 'YUL',
-            get_dates(date(2021, 7, 30), date(2021, 8, 6)),
-            get_dates(date(2021, 9, 30), date(2021, 10, 6)))
+start_kayak_2('economy', 'REC', 'YUL',
+              get_dates(date(2021, 7, 30), date(2021, 8, 6)),
+              get_dates(date(2021, 9, 30), date(2021, 10, 6)))
