@@ -225,7 +225,7 @@ def start_kayak_1(level, city_from, city_to, dates):
 
     if len(df_flights.index) == 0:
         print("No flights found.")
-        SystemExit(1)
+        return
 
     file = '{}_{}_{}-{}.xlsx'.format(strftime("%Y%m%d-%H%M%S"), level.replace(',', '-'), city_from, city_to)
 
@@ -412,8 +412,8 @@ def start_kayak_2(level, city_from, city_to, dates1, dates2):
             matrix_prices_all.extend(matrix_prices)
 
     if len(df_flights.index) == 0:
-        print("No flights found.")
-        SystemExit(1)
+        print("No flights found")
+        return
 
     file = '{}_{}_{}-{}.xlsx'.format(strftime("%Y%m%d-%H%M%S"), level.replace(',', '-'), city_from, city_to)
 
@@ -439,7 +439,6 @@ def start_kayak_2(level, city_from, city_to, dates1, dates2):
           'Average Price: {}\n'
           .format(city_from, city_to, dates1, dates2, matrix_min, matrix_avg))
 
-
 def get_dates(start, end, delta=timedelta(days=7)):
     date = start + delta / 2
     dates = []
@@ -449,9 +448,8 @@ def get_dates(start, end, delta=timedelta(days=7)):
 
     return dates
 
-
-# august/2021
 # level: economy, premium, business, first, economy,business
+
 # one-way
 start_kayak_1('economy', 'REC', 'YUL',
               get_dates(date(2021, 7, 30), date(2021, 9, 7)))
