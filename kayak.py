@@ -7,8 +7,10 @@ from time import sleep, strftime
 import pandas
 from selenium import webdriver
 
+import configparser
+
 # Change this to your own chromedriver path!
-chromedriver_path = '/opt/usr/bin/chromedriver/chromedriver'
+chromedriver_path = 'C:\\temp\\chromedriver_win32\\chromedriver.exe'
 
 # https://sqa.stackexchange.com/questions/9904/how-to-set-browser-locale-with-chromedriver-python
 chromedriver_options = webdriver.ChromeOptions()
@@ -448,12 +450,18 @@ def get_dates(start, end, delta=timedelta(days=7)):
 
     return dates
 
+def read_config():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    return config
+
+cfg = read_config()
 # level: economy, premium, business, first, economy,business
 
 # one-way
-start_kayak_1('economy', 'REC', 'YUL',
-              get_dates(date(2021, 7, 30), date(2021, 9, 7)))
+#start_kayak_1('economy', 'REC', 'YUL',
+#              get_dates(date(2021, 7, 30), date(2021, 9, 7)))
 # round-trip
-start_kayak_2('economy', 'REC', 'YUL',
-              get_dates(date(2021, 7, 30), date(2021, 8, 6)),
-              get_dates(date(2021, 9, 30), date(2021, 10, 6)))
+start_kayak_2('economy', cfg['FLIGHT']['From'], cfg['FLIGHT']['To'],
+              get_dates(date(2021, 8, 27), date(2021, 9, 2)),
+              get_dates(date(2021, 9, 27), date(2021, 10, 2)))
