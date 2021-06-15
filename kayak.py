@@ -19,7 +19,7 @@ chromedriver_options = webdriver.ChromeOptions()
 
 # This will open the Chrome window
 driver = webdriver.Chrome(executable_path=chromedriver_path, options=chromedriver_options)
-
+driver.implicitly_wait(5)
 
 # sleep(2)
 
@@ -439,14 +439,19 @@ def start_kayak_2(level, city_from, city_to, dates1, dates2):
           'Average Price: {}\n'
           .format(city_from, city_to, dates1, dates2, matrix_min, matrix_avg))
 
+
 def get_dates(start, end, delta=timedelta(days=7)):
-    date = start + delta / 2
+    half_delta = delta / 2
+
+    date = start + half_delta
+
     dates = []
-    while (date + delta / 2) <= end:
+    while (date - half_delta) <= end:
         dates.append(date.strftime('%Y-%m-%d'))
         date += delta
 
     return dates
+
 
 # level: economy, premium, business, first, economy,business
 
@@ -454,6 +459,6 @@ def get_dates(start, end, delta=timedelta(days=7)):
 start_kayak_1('economy', 'REC', 'YUL',
               get_dates(date(2021, 7, 30), date(2021, 9, 7)))
 # round-trip
-start_kayak_2('economy', 'REC', 'YUL',
-              get_dates(date(2021, 7, 30), date(2021, 8, 6)),
-              get_dates(date(2021, 9, 30), date(2021, 10, 6)))
+# start_kayak_2('economy', 'REC', 'YUL',
+#               get_dates(date(2021, 7, 30), date(2021, 8, 6)),
+#               get_dates(date(2021, 9, 30), date(2021, 10, 6)))
