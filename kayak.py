@@ -463,13 +463,11 @@ def read_config():
 cfg = read_config()
 
 
-# level: economy, premium, business, first, economy,business
-
 # one-way
 #start_kayak_1('economy', 'REC', 'YUL',
 #              get_dates(date(2021, 7, 30), date(2021, 9, 7)))
 # round-trip
-start_kayak_2('economy', cfg['FLIGHT']['From'], cfg['FLIGHT']['To'],
+start_kayak_2(cfg['FLIGHT']['Level'], cfg['FLIGHT']['From'], cfg['FLIGHT']['To'],
               get_dates(date(2021, 8, 27), date(2021, 9, 2)),
               get_dates(date(2021, 9, 27), date(2021, 10, 2)))
 
