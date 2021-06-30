@@ -3,35 +3,14 @@
 from datetime import timedelta, date
 from math import ceil
 from time import sleep, strftime
-
-import pandas
 from selenium import webdriver
-
+import pandas
 import configparser
 
 def read_config():
     config = configparser.ConfigParser()
     config.read('config.ini')
     return config
-
-cfg = read_config()
-
-
-# Change this to your own chromedriver path!
-chromedriver_path = cfg['APP']['chromedriver_path']
-
-# https://sqa.stackexchange.com/questions/9904/how-to-set-browser-locale-with-chromedriver-python
-chromedriver_options = webdriver.ChromeOptions()
-# chromedriver_options.add_argument("--start-maximized")
-# chromedriver_options.add_argument('lang=pt')
-# chromedriver_options.add_argument('--lang=pt') <- Tried this option as well
-# chromedriver_options.add_experimental_option('prefs', {'intl.accept_languages': 'pt,pt_BR'})
-
-# This will open the Chrome window
-driver = webdriver.Chrome(executable_path=chromedriver_path, options=chromedriver_options)
-driver.implicitly_wait(5)
-
-# sleep(2)
 
 def simple_test(city_from, city_to, dates):
     kayak = 'https://www.kayak.com.br/flights/REC-YUL/2021-08-23-flexible/2adults/children-17-17?sort=bestflight_a&fs=layoverdur=-720;legdur=-1830;layoverair=-EWR,MIA,FLL,LGA,JFK,IAH,ATL'
@@ -461,6 +440,27 @@ def get_dates(start, end, delta=timedelta(days=7)):
         date += delta
 
     return dates
+
+
+cfg = read_config()
+
+
+# Change this to your own chromedriver path!
+chromedriver_path = cfg['APP']['chromedriver_path']
+
+# https://sqa.stackexchange.com/questions/9904/how-to-set-browser-locale-with-chromedriver-python
+chromedriver_options = webdriver.ChromeOptions()
+# chromedriver_options.add_argument("--start-maximized")
+# chromedriver_options.add_argument('lang=pt')
+# chromedriver_options.add_argument('--lang=pt') <- Tried this option as well
+# chromedriver_options.add_experimental_option('prefs', {'intl.accept_languages': 'pt,pt_BR'})
+
+# This will open the Chrome window
+driver = webdriver.Chrome(executable_path=chromedriver_path, options=chromedriver_options)
+driver.implicitly_wait(5)
+
+# sleep(2)
+
 
 
 # one-way
