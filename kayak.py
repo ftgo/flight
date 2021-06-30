@@ -9,8 +9,16 @@ from selenium import webdriver
 
 import configparser
 
+def read_config():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    return config
+
+cfg = read_config()
+
+
 # Change this to your own chromedriver path!
-chromedriver_path = 'C:\\temp\\chromedriver_win32\\chromedriver.exe'
+chromedriver_path = cfg['APP']['chromedriver_path']
 
 # https://sqa.stackexchange.com/questions/9904/how-to-set-browser-locale-with-chromedriver-python
 chromedriver_options = webdriver.ChromeOptions()
@@ -453,14 +461,6 @@ def get_dates(start, end, delta=timedelta(days=7)):
         date += delta
 
     return dates
-
-
-def read_config():
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    return config
-
-cfg = read_config()
 
 
 # one-way
