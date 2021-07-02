@@ -464,10 +464,10 @@ driver.implicitly_wait(5)
 
 
 # one-way
-#start_kayak_1('economy', 'REC', 'YUL',
-#              get_dates(date(2021, 7, 30), date(2021, 9, 7)))
+start_kayak_1('economy', 'REC', 'YUL',
+             get_dates(date(2021, 7, 30), date(2021, 9, 7)))
 # round-trip
-start_kayak_2(cfg['FLIGHT']['Level'], cfg['FLIGHT']['From'], cfg['FLIGHT']['To'],
-              get_dates(date(2021, 8, 27), date(2021, 9, 2)),
-              get_dates(date(2021, 9, 27), date(2021, 10, 2)))
+# start_kayak_2(cfg['FLIGHT']['Level'], cfg['FLIGHT']['From'], cfg['FLIGHT']['To'],
+#               get_dates(date(2021, 8, 27), date(2021, 9, 2)),
+#               get_dates(date(2021, 9, 27), date(2021, 10, 2)))
 
